@@ -4,11 +4,13 @@ mod wasm4;
 mod heart;
 mod enemy;
 mod projectile;
+mod music;
 
 use heart::Heart;
 use wasm4::*;
 use enemy::Enemy;
 use enemy::{SANS, SANS_FLAGS, SANS_HEIGHT, SANS_WIDTH};
+use music::update_music;
 
 // Enum para controlar o estado do jogo
 enum GameState {
@@ -45,7 +47,7 @@ fn update() {
                 }
             }
             GameState::Playing => {
-                // Lógica do Jogo Principal (o que já existia)
+                // Lógica do Jogo Principal 
                 if HEART.is_none() {
                     HEART = Some(Heart::new());
                 }
@@ -77,7 +79,10 @@ fn update() {
                         GAME_STATE = GameState::GameOver;
                     }
                 }
-            }
+
+                update_music();  
+
+            }      
             GameState::GameOver => {
                 // Lógica de Fim de Jogo
                 *DRAW_COLORS = 0x21;
