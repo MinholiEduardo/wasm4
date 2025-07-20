@@ -1,13 +1,6 @@
 use crate::wasm4::*;
 
 #[derive(Clone, Copy)]
-struct Note {
-    note_id: i32,     // número da nota 
-    duration: u32,    // em frames
-    volume: u32,      // volume
-    flags: u32,       // "Instrumento" usado
-    wait: u32,        // tempo até a próxima nota
-}
 
 fn note_to_freq(note_id: i32) -> u32 {
     if note_id < 0 {
@@ -20,558 +13,37 @@ fn note_to_freq(note_id: i32) -> u32 {
 
 // === Megalovania ===
 // Melodia no canal 1 (Pulse 1)
-static MELODY: &[Note] = &[
-    Note { note_id: 51, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 51, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 63, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    
-    Note { note_id: 58, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 57, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 56, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 51, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 56, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-
-
-    Note { note_id: 49, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 49, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 63, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    
-    Note { note_id: 58, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 57, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 56, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 51, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 56, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-
-
-    Note { note_id: 48, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 48, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 63, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    
-    Note { note_id: 58, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 57, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 56, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 51, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 56, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-
-
-    Note { note_id: 47, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 47, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 63, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    
-    Note { note_id: 58, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 57, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 56, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 51, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 56, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-
-
-
-
-
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 51, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 51, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-
-
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 56, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 57, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 56, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 51, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 56, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-
-
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 54, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 56, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 57, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 58, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 61, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 58, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-
-
-    Note { note_id: 63, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 63, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    
-    Note { note_id: 63, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 58, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 63, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 61, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: 75, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-
-
-
-
-
-    Note { note_id: 70, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 70, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 70, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 70, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 70, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 68, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 68, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-
-
-    Note { note_id: 70, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 70, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    
-    Note { note_id: 70, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 70, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 68, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 70, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 75, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 70, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 68, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-
-
-    Note { note_id: 75, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 70, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    
-    Note { note_id: 68, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 66, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: 73, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 68, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: 66, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 65, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-
-
-    Note { note_id: 59, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 63, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 65, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 66, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: 75, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
-
-
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE2, wait: 7 },
+static MELODY: &[i32] = &[
+51, 51, 63, -1, 58, -1, -1, 57, -1, 56, -1, 54, -1, 51, 54, 56,
+49, 49, 63, -1, 58, -1, -1, 57, -1, 56, -1, 54, -1, 51, 54, 56,
+48, 48, 63, -1, 58, -1, -1, 57, -1, 56, -1, 54, -1, 51, 54, 56,
+47, 47, 63, -1, 58, -1, -1, 57, -1, 56, -1, 54, -1, 51, 54, 56,
+54, -1, 54, 54, -1, 54, -1, 54, -1, 51, -1, 51, -1, -1, -1, -1,
+54, -1, 54, 54, -1, 56, -1, 57, -1, 56, 54, 51, 54, 56, -1, -1,
+54, -1, 54, 54, -1, 56, -1, 57, -1, 58, -1, 61, -1, 58, -1, -1,
+63, -1, 63, -1, 63, 58, 63, 61, -1, -1, -1, -1, 75, -1, -1, -1,
+70, -1, 70, 70, -1, 70, -1, 70, -1, 68, -1, 68, -1, -1, -1, -1,
+70, -1, 70, -1, 70, 70, -1, 68, -1, 70, -1, 75, -1, 70, 68, -1,
+75, -1, 70, -1, 68, -1, 66, -1, 73, -1, 68, -1, 66, -1, 65, -1,
+59, -1, 63, 65, -1, 66, -1, 75, -1, -1, -1, -1, -1, -1, -1, -1,
+-1,
 ];
 
-
-
-
-
-
 // Harmonia no canal 2 (Pulse 2)
-static HARMONY: &[Note] = &[
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-
-
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-
-
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-
-
-    Note { note_id: 35, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 35, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    
-    Note { note_id: 35, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 35, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-
-
-
-
-
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-
-
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-
-
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-
-
-    Note { note_id: 35, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 35, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    
-    Note { note_id: 35, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 35, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-
-
-
-
-
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 51, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    
-    Note { note_id: 46, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 45, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 44, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 42, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 42, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 44, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-
-
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 37, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 51, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    
-    Note { note_id: 46, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 45, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 44, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 42, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 42, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 44, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-
-
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 36, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 51, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    
-    Note { note_id: 46, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 45, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 44, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 42, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 42, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 44, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-
-
-    Note { note_id: 35, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 35, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 51, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    
-    Note { note_id: 46, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 45, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 44, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 42, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 39, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 42, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-    Note { note_id: 44, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
-
-
-
-    Note { note_id: -1, duration: 10, volume: 50, flags: TONE_PULSE1, wait: 7 },
+static HARMONY: &[i32] = &[
+39, 39, -1, -1, 39, 39, -1, 39, -1, 39, -1, 39, -1, 39, 39, 39,
+37, 37, -1, -1, 37, 37, -1, 37, -1, 37, -1, 37, -1, 37, 37, 37,
+36, 36, -1, -1, 36, 36, -1, 36, -1, 36, -1, 36, -1, 36, 36, 36,
+35, 35, -1, -1, 35, 35, -1, 37, -1, 37, -1, 37, -1, 37, 37, 37,
+39, 39, -1, -1, 39, 39, -1, 39, -1, 39, -1, 39, -1, 39, 39, 39,
+37, 37, -1, -1, 37, 37, -1, 37, -1, 37, -1, 37, -1, 37, 37, 37,
+36, 36, -1, -1, 36, 36, -1, 36, -1, 36, -1, 36, -1, 36, 36, 36,
+35, 35, -1, -1, 35, 35, -1, 37, -1, 37, -1, 37, -1, 37, 37, 37,
+39, 39, 51, -1, 46, -1, -1, 45, -1, 44, -1, 42, -1, 39, 42, 44,
+37, 37, 51, -1, 46, -1, -1, 45, -1, 44, -1, 42, -1, 39, 42, 44,
+36, 36, 51, -1, 46, -1, -1, 45, -1, 44, -1, 42, -1, 39, 42, 44,
+35, 35, 51, -1, 46, -1, -1, 45, -1, 44, -1, 42, -1, 39, 42, 44,
+-1,
 ];
 
 static mut IDX1: usize = 0;
@@ -585,11 +57,11 @@ pub fn update_music() {
         if IDX1 < MELODY.len() {
             if TIMER1 == 0 {
                 let n = &MELODY[IDX1];
-                if n.note_id >= 0 {
-                    let freq = note_to_freq(n.note_id);
-                    tone(freq, n.duration, n.volume, n.flags);
+                if *n >= 0 {
+                    let freq = note_to_freq(*n);
+                    tone(freq, 10, 50, TONE_PULSE2);
                 }
-                TIMER1 = n.wait;
+                TIMER1 = 7;
                 IDX1 += 1;
             } else {
                 TIMER1 -= 1;
@@ -600,11 +72,11 @@ pub fn update_music() {
         if IDX2 < HARMONY.len() {
             if TIMER2 == 0 {
                 let n = &HARMONY[IDX2];
-                if n.note_id >= 0 {
-                    let freq = note_to_freq(n.note_id);
-                    tone(freq, n.duration, n.volume, n.flags);
+                if *n >= 0 {
+                    let freq = note_to_freq(*n);
+                    tone(freq, 10, 50, TONE_PULSE1);
                 }
-                TIMER2 = n.wait;
+                TIMER2 = 7;
                 IDX2 += 1;
             } else {
                 TIMER2 -= 1;
