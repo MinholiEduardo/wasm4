@@ -27,12 +27,22 @@ pub const SANS: [u8; 313] = [
     0xff,0xf8,0x09,0xfc,0x20,0x3f,0xf0
 ];
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum DifficultyLevel {
+    Easy,    // 0-30 segundos
+    Medium,  // 30-60 segundos  
+    Hard,    // 60-90 segundos
+    Victory, // Completou tudo!
+}
+
 pub struct Enemy {
+    #[allow(dead_code)]
     pub pos: Point,
     pub projectiles: Vec<Projectile>,
-    attack_timer: u32,
-    attack_pattern: u32,
-    pattern_phase: u32, // Para subdivisões dentro de cada padrão
+    game_timer: u32,           // Timer geral do jogo
+    attack_timer: u32,         // Timer para ataques
+    pub difficulty: DifficultyLevel,
+    victory_achieved: bool,
 }
 
 impl Enemy {
@@ -40,14 +50,30 @@ impl Enemy {
         Self {
             pos: Point { x: 80, y: 20 },
             projectiles: Vec::new(),
+            game_timer: 0,
             attack_timer: 0,
-            attack_pattern: 0,
-            pattern_phase: 0,
+            difficulty: DifficultyLevel::Easy,
+            victory_achieved: false,
         }
     }
 
     pub fn update(&mut self, heart: &mut Heart) {
+        self.game_timer += 1;
         self.attack_timer += 1;
+        
+        // Atualiza nível de dificuldade baseado no tempo
+        // 30 segundos = 1800 frames (assumindo 60 FPS)
+        self.difficulty = match self.game_timer {
+            0..=1800 => DifficultyLevel::Easy,      // 0-30s
+            1801..=3600 => DifficultyLevel::Medium, // 30-60s  
+            3601..=5400 => DifficultyLevel::Hard,   // 60-90s
+            _ => {
+                if !self.victory_achieved {
+                    self.victory_achieved = true;
+                }
+                DifficultyLevel::Victory
+            }
+        };
         
         // Atualiza projéteis existentes
         self.projectiles.retain_mut(|projectile| {
@@ -58,10 +84,11 @@ impl Enemy {
                 return false;
             }
             
-            // Verifica colisão com o heart usando o novo método
+            // Verifica colisão com o heart
             if projectile.collides_with_heart(heart) {
-                if heart.life > 0 {
-                    heart.life -= 1;
+                let damage = projectile.projectile_type.damage();
+                if heart.take_damage(damage) {
+                    // Dano foi aplicado com sucesso
                 }
                 return false; // Remove o projétil após hit
             }
@@ -69,134 +96,150 @@ impl Enemy {
             true
         });
         
-        // Muda padrão de ataque a cada 240 frames (4 segundos a 60fps)
-        if self.attack_timer % 240 == 0 {
-            self.attack_pattern = (self.attack_pattern + 1) % 5;
-            self.pattern_phase = 0; // Reset phase quando muda padrão
-        }
-        
-        // Diferentes padrões de ataque
-        match self.attack_pattern {
-            0 => self.pattern_basic_shots(heart),
-            1 => self.pattern_rectangle_barrage(heart),
-            2 => self.pattern_mixed_sizes(heart),
-            3 => self.pattern_corner_chaos(heart),
-            4 => self.pattern_spiral_attack(heart),
-            _ => {}
+        // Ataques baseados na dificuldade
+        match self.difficulty {
+            DifficultyLevel::Easy => self.easy_mode(heart),
+            DifficultyLevel::Medium => self.medium_mode(heart),
+            DifficultyLevel::Hard => self.hard_mode(heart),
+            DifficultyLevel::Victory => {} // Sem ataques - jogador venceu!
         }
     }
     
-    // Padrão 0: Tiros básicos simples - mais fácil
-    fn pattern_basic_shots(&mut self, heart: &Heart) {
-        if self.attack_timer % 50 == 0 { // A cada ~0.83 segundos
-            let spawn_point = Point { x: 80, y: 20 }; // Do topo
-            let projectile = Projectile::new(
-                spawn_point, 
-                heart.body, 
-                ProjectileType::Small
+    // Função para resetar o enemy (para recomeçar jogo)
+    pub fn reset(&mut self) {
+        self.projectiles.clear();
+        self.game_timer = 0;
+        self.attack_timer = 0;
+        self.difficulty = DifficultyLevel::Easy;
+        self.victory_achieved = false;
+    }
+    
+    // MODO FÁCIL: Apenas bolinhas pequenas das bordas, devagar
+    fn easy_mode(&mut self, heart: &Heart) {
+        if self.attack_timer % 80 == 0 { // A cada ~1.33 segundos
+            // Usa um multiplicador maior para criar mais variação nas posições
+            let edge_position = ((self.attack_timer as f32 * 0.37) % 4.0) / 4.0; // 0.37 é um multiplicador que cria variação
+            
+            let projectile = Projectile::new_from_rectangle_edge_with_distance(
+                20, 70, 120, 70,
+                heart.body,
+                ProjectileType::Small, // Apenas pequenos
+                edge_position,
+                20 // 20 pixels de distância da borda
             );
             self.projectiles.push(projectile);
         }
     }
     
-    // Padrão 1: Barrage das bordas do retângulo
-    fn pattern_rectangle_barrage(&mut self, heart: &Heart) {
-        if self.attack_timer % 120 == 0 { // A cada 2 segundos
-            let new_projectiles = Projectile::create_barrage_from_rectangle(
-                20, 70, 120, 70, // Área de jogo (x, y, width, height)
-                heart.body,
-                8 // 8 projéteis por barrage
-            );
-            self.projectiles.extend(new_projectiles);
-        }
-    }
-    
-    // Padrão 2: Tamanhos mistos - médio/difícil
-    fn pattern_mixed_sizes(&mut self, heart: &Heart) {
-        if self.attack_timer % 80 == 0 { // A cada ~1.33 segundos
-            // Projétil grande lento
-            let large_proj = Projectile::new_from_rectangle_edge(
+    // MODO MÉDIO: Bolinhas pequenas + rápidas + quadrados grandes (misto)
+    fn medium_mode(&mut self, heart: &Heart) {
+        // Projéteis pequenos regulares
+        if self.attack_timer % 60 == 0 { // A cada 1 segundo
+            let edge_position = ((self.attack_timer as f32 * 0.43) % 4.0) / 4.0;
+            
+            let projectile = Projectile::new_from_rectangle_edge_with_distance(
                 20, 70, 120, 70,
                 heart.body,
-                ProjectileType::Large,
-                (self.pattern_phase as f32 % 4.0) / 4.0
+                ProjectileType::Small,
+                edge_position,
+                18 // 18 pixels de distância
             );
-            self.projectiles.push(large_proj);
-            
-            self.pattern_phase += 1;
+            self.projectiles.push(projectile);
         }
         
-        // Projéteis pequenos rápidos intercalados
-        if self.attack_timer % 25 == 0 {
-            let fast_proj = Projectile::new_from_rectangle_edge(
+        // Projéteis grandes ocasionais
+        if self.attack_timer % 120 == 0 { // A cada 2 segundos
+            let edge_position = ((self.attack_timer as f32 * 0.71) % 4.0) / 4.0;
+            
+            let large_proj = Projectile::new_from_rectangle_edge_with_distance(
                 20, 70, 120, 70,
                 heart.body,
-                ProjectileType::FastSmall,
-                (self.attack_timer as f32 % 100.0) / 100.0
+                ProjectileType::Large, // Grandes e lentos
+                edge_position,
+                25 // Maior distância para projéteis grandes
+            );
+            self.projectiles.push(large_proj);
+        }
+        
+        // Projéteis rápidos ocasionais
+        if self.attack_timer % 90 == 0 { // A cada 1.5 segundos
+            let edge_position = ((self.attack_timer as f32 * 0.29) % 4.0) / 4.0;
+            
+            let fast_proj = Projectile::new_from_rectangle_edge_with_distance(
+                20, 70, 120, 70,
+                heart.body,
+                ProjectileType::FastSmall, // Pequenos e rápidos
+                edge_position,
+                15 // Menos distância para rápidos (mais desafiador)
             );
             self.projectiles.push(fast_proj);
         }
     }
     
-    // Padrão 3: Caos dos cantos - difícil
-    fn pattern_corner_chaos(&mut self, heart: &Heart) {
-        if self.attack_timer % 20 == 0 { // A cada ~0.33 segundos - bem rápido!
-            let corners = [
-                Point { x: 20, y: 70 },   // Canto superior esquerdo
-                Point { x: 140, y: 70 },  // Canto superior direito  
-                Point { x: 20, y: 140 },  // Canto inferior esquerdo
-                Point { x: 140, y: 140 }, // Canto inferior direito
-            ];
+    // MODO DIFÍCIL: Barrage leve + ataques variados
+    fn hard_mode(&mut self, heart: &Heart) {
+        // Projéteis constantes das bordas
+        if self.attack_timer % 45 == 0 { // A cada 0.75 segundos
+            let edge_position = ((self.attack_timer as f32 * 0.61) % 4.0) / 4.0;
             
-            let corner_index = (self.attack_timer / 20) % 4;
-            let spawn_point = corners[corner_index as usize];
-            
-            let projectile_type = if self.attack_timer % 60 == 0 {
-                ProjectileType::Medium
-            } else {
-                ProjectileType::Small
+            let projectile_type = match (self.attack_timer / 45) % 3 {
+                0 => ProjectileType::Small,
+                1 => ProjectileType::Medium,
+                _ => ProjectileType::FastSmall,
             };
             
-            let projectile = Projectile::new(
-                spawn_point,
+            let projectile = Projectile::new_from_rectangle_edge_with_distance(
+                20, 70, 120, 70,
                 heart.body,
-                projectile_type
+                projectile_type,
+                edge_position,
+                16 // Distância menor no modo difícil
             );
             self.projectiles.push(projectile);
+        }
+        
+        // Barrage leve ocasional (4 projéteis ao invés de 8)
+        if self.attack_timer % 180 == 0 { // A cada 3 segundos
+            let new_projectiles = Projectile::create_barrage_from_rectangle_with_distance(
+                20, 70, 120, 70,
+                heart.body,
+                4, // Apenas 4 projéteis por barrage (mais leve)
+                22 // Distância da barrage
+            );
+            self.projectiles.extend(new_projectiles);
+        }
+        
+        // Projétil grande ocasional
+        if self.attack_timer % 150 == 0 { // A cada 2.5 segundos
+            let edge_position = ((self.attack_timer as f32 * 0.83) % 4.0) / 4.0;
+            
+            let large_proj = Projectile::new_from_rectangle_edge_with_distance(
+                20, 70, 120, 70,
+                heart.body,
+                ProjectileType::Large,
+                edge_position,
+                20 // Distância média para grandes
+            );
+            self.projectiles.push(large_proj);
         }
     }
     
-    // Padrão 4: Ataque em espiral - muito difícil
-    fn pattern_spiral_attack(&mut self, heart: &Heart) {
-        if self.attack_timer % 15 == 0 { // Muito rápido!
-            let center_x = 80;
-            let center_y = 105; // Centro da área de jogo
-            
-            // Calcula posição em espiral
-            let angle = (self.pattern_phase as f32) * 0.5; // Velocidade da espiral
-            let spiral_radius = 30.0 + (self.pattern_phase as f32 % 30.0);
-            
-            let spawn_x = center_x + (angle.cos() * spiral_radius) as i32;
-            let spawn_y = center_y + (angle.sin() * spiral_radius) as i32;
-            
-            let spawn_point = Point { x: spawn_x, y: spawn_y };
-            
-            // Alterna entre tipos para maior variação
-            let projectile_type = match self.pattern_phase % 3 {
-                0 => ProjectileType::Small,
-                1 => ProjectileType::FastSmall,
-                _ => ProjectileType::Medium,
-            };
-            
-            let projectile = Projectile::new(
-                spawn_point,
-                heart.body,
-                projectile_type
-            );
-            self.projectiles.push(projectile);
-            
-            self.pattern_phase += 1;
-        }
+    // Função para verificar se o jogador venceu
+    pub fn has_player_won(&self) -> bool {
+        self.victory_achieved
+    }
+    
+    // Função para obter tempo restante no nível atual (em segundos)
+    pub fn get_time_remaining_in_level(&self) -> u32 {
+        let frames_per_level = 1800; // 30 segundos
+        let current_level_frames = self.game_timer % frames_per_level;
+        let remaining_frames = frames_per_level - current_level_frames;
+        remaining_frames / 60 // Converte para segundos
+    }
+    
+    // Função para obter tempo total de jogo (em segundos)
+    pub fn get_total_time(&self) -> u32 {
+        self.game_timer / 60
     }
     
     pub fn draw(&self) {
@@ -209,11 +252,23 @@ impl Enemy {
             proj.draw();
         }
         
-        // Debug: mostra padrão atual (opcional - remova se não quiser)
+        // Mostra nível atual e tempo
         unsafe { *DRAW_COLORS = 0x12 }
-        let pattern_names = ["BASIC", "BARRAGE", "MIXED", "CHAOS", "SPIRAL"];
-        if let Some(name) = pattern_names.get(self.attack_pattern as usize) {
-            text(name, 5, 5);
+        let (level_name, time_remaining) = match self.difficulty {
+            DifficultyLevel::Easy => ("EASY", self.get_time_remaining_in_level()),
+            DifficultyLevel::Medium => ("MEDIUM", self.get_time_remaining_in_level()),
+            DifficultyLevel::Hard => ("HARD", self.get_time_remaining_in_level()),
+            DifficultyLevel::Victory => ("VICTORY!", 0),
+        };
+        
+        text(level_name, 5, 5);
+        
+        if !matches!(self.difficulty, DifficultyLevel::Victory) {
+            // Mostra tempo restante no nível
+            let time_text = format!("{}s", time_remaining);
+            text(&time_text, 5, 15);
+        } else {
+            text("COMPLETED!", 5, 15);
         }
     }
 }

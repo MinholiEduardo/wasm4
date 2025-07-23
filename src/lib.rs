@@ -17,6 +17,7 @@ enum GameState {
     StartScreen,
     Playing,
     GameOver,
+    Victory,
 }
 
 static mut HEART: Option<Heart> = None;
@@ -66,16 +67,21 @@ fn update() {
                 rect(20, 70, 120, 70);
 
                 if let (Some(ref mut heart), Some(ref mut enemy)) = (HEART.as_mut(), ENEMY.as_mut()) {
-                    if heart.life > 0 {
+                    if !heart.is_dead() {
                         heart.update();
                         enemy.update(heart);
+                        
+                        // Verifica se o jogador venceu
+                        if enemy.has_player_won() {
+                            GAME_STATE = GameState::Victory;
+                        }
                     }
-
+                    
                     heart.draw();
-                    heart.draw_life_bar();
+                    heart.draw_hp_bar(); // Muda de draw_life_bar para draw_hp_bar
                     enemy.draw();
-
-                    if heart.life == 0 {
+                    
+                    if heart.is_dead() {
                         GAME_STATE = GameState::GameOver;
                     }
                 }
@@ -84,9 +90,41 @@ fn update() {
 
             }      
             GameState::GameOver => {
-                // Lógica de Fim de Jogo
+                // Tela de Game Over
                 *DRAW_COLORS = 0x21;
-                text("GAME OVER", 45, 80);
+                text("GAME OVER", 45, 60);
+                text("PRESS Z TO", 40, 80);
+                text("RESTART", 50, 100);
+                
+                // Verifica se Z foi pressionado para recomeçar
+                let gamepad = *GAMEPAD1;
+                if gamepad & BUTTON_1 != 0 { // BUTTON_1 é o Z
+                    // Reset do jogo
+                    if let (Some(ref mut heart), Some(ref mut enemy)) = (HEART.as_mut(), ENEMY.as_mut()) {
+                        heart.reset();
+                        enemy.reset();
+                    }
+                    GAME_STATE = GameState::Playing;
+                }
+            }
+
+            GameState::Victory => {
+            // Tela de vitória
+                *DRAW_COLORS = 0x31;
+                text("CONGRATULATIONS!", 20, 60);
+                text("YOU SURVIVED!", 30, 80);
+                text("90 SECONDS!", 35, 100);
+                text("YOU WIN!", 40, 120);
+
+                let gamepad = *GAMEPAD1;
+                if gamepad & BUTTON_1 != 0 { // BUTTON_1 é o Z
+                    // Reset do jogo
+                    if let (Some(ref mut heart), Some(ref mut enemy)) = (HEART.as_mut(), ENEMY.as_mut()) {
+                        heart.reset();
+                        enemy.reset();
+                    }
+                    GAME_STATE = GameState::Playing;
+                }
             }
         }
     }

@@ -19,12 +19,22 @@ impl ProjectileType {
         }
     }
     
+    // Nova função para hitbox - pode ser menor que o tamanho visual
+    pub fn hitbox_size(&self) -> u32 {
+        match self {
+            ProjectileType::Small => 4,
+            ProjectileType::Medium => 7,     // Ligeiramente menor
+            ProjectileType::Large => 9,      // Bem menor que os 12 visuais
+            ProjectileType::FastSmall => 3,
+        }
+    }
+    
     pub fn speed(&self) -> f32 {
         match self {
             ProjectileType::Small => 1.2,
             ProjectileType::Medium => 1.0,
             ProjectileType::Large => 0.8,
-            ProjectileType::FastSmall => 2.5,
+            ProjectileType::FastSmall => 2.0,
         }
     }
     
@@ -36,7 +46,17 @@ impl ProjectileType {
             ProjectileType::FastSmall => 0x43,  // Cor diferente para rápidos
         }
     }
+
+    pub fn damage(&self) -> u8 {
+        match self {
+            ProjectileType::Small => 5,        // Dano baixo
+            ProjectileType::Medium => 10,      // Dano médio
+            ProjectileType::Large => 20,       // Dano alto
+            ProjectileType::FastSmall => 5,    // Dano baixo (compensa pela velocidade)
+        }
+    }
 }
+
 
 pub struct Projectile {
     pub pos: (f32, f32),
@@ -59,15 +79,16 @@ impl Projectile {
         }
     }
     
-    // Função para criar projétil de uma borda específica do retângulo
-    pub fn new_from_rectangle_edge(
+    // Função para criar projétil de uma borda específica do retângulo com distância
+    pub fn new_from_rectangle_edge_with_distance(
         rect_x: i32, 
         rect_y: i32, 
         rect_width: u32, 
         rect_height: u32,
         target: Point,
         projectile_type: ProjectileType,
-        edge_position: f32  // 0.0 a 1.0 para posição na borda
+        edge_position: f32,  // 0.0 a 1.0 para posição na borda
+        distance: i32        // Distância da borda em pixels
     ) -> Self {
         // Escolhe uma borda aleatória (0-3: top, right, bottom, left)
         let edge = (edge_position * 4.0) as u32 % 4;
@@ -75,38 +96,39 @@ impl Projectile {
         
         let spawn_point = match edge {
             0 => {
-                // Borda superior
+                // Borda superior - spawn acima do retângulo
                 let x = rect_x + (rect_width as f32 * position_on_edge) as i32;
-                Point { x, y: rect_y }
+                Point { x, y: rect_y - distance }
             },
             1 => {
-                // Borda direita  
+                // Borda direita - spawn à direita do retângulo
                 let y = rect_y + (rect_height as f32 * position_on_edge) as i32;
-                Point { x: rect_x + rect_width as i32, y }
+                Point { x: rect_x + rect_width as i32 + distance, y }
             },
             2 => {
-                // Borda inferior
+                // Borda inferior - spawn abaixo do retângulo
                 let x = rect_x + (rect_width as f32 * position_on_edge) as i32;
-                Point { x, y: rect_y + rect_height as i32 }
+                Point { x, y: rect_y + rect_height as i32 + distance }
             },
             _ => {
-                // Borda esquerda
+                // Borda esquerda - spawn à esquerda do retângulo
                 let y = rect_y + (rect_height as f32 * position_on_edge) as i32;
-                Point { x: rect_x, y }
+                Point { x: rect_x - distance, y }
             }
         };
         
         Self::new(spawn_point, target, projectile_type)
     }
     
-    // Função para criar múltiplos projéteis das bordas
-    pub fn create_barrage_from_rectangle(
+    // Função para criar múltiplos projéteis das bordas com distância
+    pub fn create_barrage_from_rectangle_with_distance(
         rect_x: i32,
         rect_y: i32, 
         rect_width: u32,
         rect_height: u32,
         target: Point,
-        count: u32
+        count: u32,
+        distance: i32
     ) -> Vec<Self> {
         let mut projectiles = Vec::new();
         
@@ -121,9 +143,9 @@ impl Projectile {
                 _ => if i % 12 == 3 { ProjectileType::FastSmall } else { ProjectileType::Small },
             };
             
-            let projectile = Self::new_from_rectangle_edge(
+            let projectile = Self::new_from_rectangle_edge_with_distance(
                 rect_x, rect_y, rect_width, rect_height,
-                target, projectile_type, edge_position
+                target, projectile_type, edge_position, distance
             );
             
             projectiles.push(projectile);
@@ -164,20 +186,34 @@ impl Projectile {
         x >= -size && x <= 160.0 + size && y >= -size && y <= 160.0 + size
     }
     
-    // Função para verificar colisão com o heart
+    // Função para verificar colisão com o heart - HITBOX MELHORADA
     pub fn collides_with_heart(&self, heart: &Heart) -> bool {
-        let projectile_size = self.projectile_type.size() as i32;
-        let heart_width = 9i32;  // HEART_WIDTH
+        // Usa hitbox_size ao invés de size para colisão mais justa
+        let projectile_hitbox = self.projectile_type.hitbox_size() as i32;
+        let heart_width = 9i32;  // HEART_WIDTH  
         let heart_height = 9i32; // HEART_HEIGHT
         
-        let proj_x = self.pos.0 as i32;
-        let proj_y = self.pos.1 as i32;
+        // Centro do projétil
+        let proj_center_x = self.pos.0 as i32;
+        let proj_center_y = self.pos.1 as i32;
+        
+        // Calcula as bordas da hitbox do projétil (centralizada)
+        let proj_left = proj_center_x - projectile_hitbox / 2;
+        let proj_right = proj_center_x + projectile_hitbox / 2;
+        let proj_top = proj_center_y - projectile_hitbox / 2;
+        let proj_bottom = proj_center_y + projectile_hitbox / 2;
+        
+        // Bordas do coração
+        let heart_left = heart.body.x;
+        let heart_right = heart.body.x + heart_width;
+        let heart_top = heart.body.y;
+        let heart_bottom = heart.body.y + heart_height;
         
         // Verifica sobreposição dos retângulos
-        proj_x < heart.body.x + heart_width &&
-        proj_x + projectile_size > heart.body.x &&
-        proj_y < heart.body.y + heart_height &&
-        proj_y + projectile_size > heart.body.y
+        proj_left < heart_right &&
+        proj_right > heart_left &&
+        proj_top < heart_bottom &&
+        proj_bottom > heart_top
     }
     
     // Função para verificar se está dentro da área de jogo (baseado no seu retângulo)
