@@ -32,8 +32,8 @@ fn update() {
                 *PALETTE = [0x000000, 0xffffff, 0xffffff, 0x000000]; // Paleta simples para a tela inicial
                 *DRAW_COLORS = 0x12;
                 text("Comic-Sans", 10, 10);
-                text("Aperte Z", 10, 30 );
-                text("Para iniciar", 10, 40);
+                text("PRESS Z", 10, 30 );
+                text("TO START", 10, 40);
 
                 *DRAW_COLORS = 0x02; // Cor 3 para o sprite, fundo transparente
                 let x_pos = 160 - SANS_WIDTH as i32 + 10; // Ajuste para ficar bonito
@@ -86,7 +86,7 @@ fn update() {
             GameState::GameOver => {
                 // Lógica de Fim de Jogo
                 *DRAW_COLORS = 0x21;
-                text("FIM DE JOGO", 36, 80);
+                text("GAME OVER", 45, 80);
             }
         }
     }

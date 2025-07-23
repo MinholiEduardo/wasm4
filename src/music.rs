@@ -1,7 +1,5 @@
 use crate::wasm4::*;
 
-#[derive(Clone, Copy)]
-
 fn note_to_freq(note_id: i32) -> u32 {
     if note_id < 0 {
         return 0;
