@@ -163,7 +163,7 @@ impl Enemy {
         if self.pattern_timer > 0 && self.pattern_timer % 50 == 0 && self.pattern_timer < 550 {
             let step = self.pattern_timer / 50;
             let from_left = step % 2 == 0;
-            let sine_wave = (self.pattern_timer as f32 * 0.08).sin(); // Frequência um pouco diferente
+            let sine_wave = (self.pattern_timer as f32 * 0.08).sin(); 
             let center_of_range = 93;
             let amplitude = 23;
             let y_pos = center_of_range + (sine_wave * amplitude as f32) as i32;
@@ -207,11 +207,10 @@ impl Enemy {
         if !self.pattern_active {
             self.pattern_active = true;
             self.pattern_timer = 0;
-            // SUGESTÃO 2: Limpa os projéteis da fase anterior ao iniciar o padrão.
+
             self.projectiles.clear();
         }
 
-        // SUGESTÃO 3: Aumenta o intervalo entre os "canos" de ossos para 70 frames.
         if self.pattern_timer > 0 && self.pattern_timer % 70 == 0 && self.pattern_timer < 600 {
             let step = self.pattern_timer / 70;
             
@@ -237,7 +236,6 @@ impl Enemy {
     }
     
     fn hard_mode(&mut self, heart: &Heart) {
-        // SUGESTÃO 1: Aumenta um pouco a taxa de disparos (intervalo de 40 para 38 frames).
         if self.attack_timer % 38 == 0 {
             let edge_position = ((self.attack_timer as f32 * 0.61) % 4.0) / 4.0;
             

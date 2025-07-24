@@ -18,8 +18,7 @@ impl ProjectileType {
             ProjectileType::FastSmall => 3,
         }
     }
-    
-    // Nova função para hitbox - pode ser menor que o tamanho visual
+
     pub fn hitbox_size(&self) -> u32 {
         match self {
             ProjectileType::Small => 4,
@@ -185,7 +184,7 @@ impl Projectile {
         x >= -size && x <= 160.0 + size && y >= -size && y <= 160.0 + size
     }
     
-    // Função para verificar colisão com o heart - HITBOX MELHORADA
+    // Função para verificar colisão com o heart
     pub fn collides_with_heart(&self, heart: &Heart) -> bool {
         // Usa hitbox_size ao invés de size para colisão mais justa
         let projectile_hitbox = self.projectile_type.hitbox_size() as i32;

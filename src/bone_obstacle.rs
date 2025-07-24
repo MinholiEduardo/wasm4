@@ -3,8 +3,6 @@
 use crate::wasm4::*;
 use crate::heart::{Heart, Point};
 
-// --- Sprites dos Ossos (movidos de projectile.rs) ---
-
 // OSSO PP
 pub const P_P_WIDTH: u32 = 5;
 pub const P_P_HEIGHT: u32 = 9;
