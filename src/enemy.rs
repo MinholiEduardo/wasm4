@@ -1,6 +1,7 @@
 use crate::wasm4::*;
 use crate::heart::{Heart, Point};
-use crate::projectile::{Projectile, ProjectileType}; // Importa Laser do projectile
+use crate::projectile::{Projectile, ProjectileType};
+use crate::bone_obstacle::{BoneObstacle, BoneType, G_HEIGHT};
 
 // sans1
 pub const SANS1_WIDTH: u32 = 50;
@@ -22,27 +23,28 @@ pub const SANS3: [u8; 325] = [ 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum DifficultyLevel {
-    Easy,           // 0-30 segundos
-    EasyTransition, // 30-35 segundos - Padrão de transição
-    Medium,         // 35-65 segundos  
-    MediumTransition, // 65-70 segundos - Padrão de transição
-    Hard,           // 70-85 segundos (15 segundos como pedido)
-    Victory,        // Completou tudo!
+    Easy,
+    EasyTransition,
+    Medium,
+    MediumTransition,
+    Hard,
+    Victory,
 }
 
 pub struct Enemy {
     #[allow(dead_code)]
     pub pos: Point,
     pub projectiles: Vec<Projectile>,
+    pub bone_obstacles: Vec<BoneObstacle>,
 
     game_timer: u32,
     attack_timer: u32,
     pub difficulty: DifficultyLevel,
     victory_achieved: bool,
-    pattern_timer: u32,     // Timer para padrões especiais
-    pattern_active: bool,   // Se um padrão está ativo
-    animation_timer: u32,   // Timer para a animação idle
-    animation_frame: usize, // Frame atual da animação
+    pattern_timer: u32,
+    pattern_active: bool,
+    animation_timer: u32,
+    animation_frame: usize,
 }
 
 impl Enemy {
@@ -50,6 +52,7 @@ impl Enemy {
         Self {
             pos: Point { x: 80, y: 20 },
             projectiles: Vec::new(),
+            bone_obstacles: Vec::new(),
             game_timer: 0,
             attack_timer: 0,
             difficulty: DifficultyLevel::Easy,
@@ -67,20 +70,17 @@ impl Enemy {
         self.pattern_timer += 1;
         self.animation_timer += 1;
         
-        // Atualiza animação idle (muda de frame a cada 15 frames = ~0.25 segundos)
         if self.animation_timer >= 15 {
             self.animation_timer = 0;
-            self.animation_frame = (self.animation_frame + 1) % 3; // Cicla entre 0, 1, 2
+            self.animation_frame = (self.animation_frame + 1) % 3;
         }
         
-        // Atualiza nível de dificuldade baseado no tempo
-        // 30 segundos = 1800 frames (assumindo 60 FPS)
         self.difficulty = match self.game_timer {
-            0..=1800 => DifficultyLevel::Easy,           // 0-30s
-            1801..=2100 => DifficultyLevel::EasyTransition, // 30-35s (5s de transição)
-            2101..=3900 => DifficultyLevel::Medium,      // 35-65s (30s)
-            3901..=4200 => DifficultyLevel::MediumTransition, // 65-70s (5s de transição)
-            4201..=5100 => DifficultyLevel::Hard,        // 70-85s (15s como pedido)
+            0..=1800 => DifficultyLevel::Easy,           // 30s
+            1801..=2400 => DifficultyLevel::EasyTransition, // 30s -> 40s (10s de transição)
+            2401..=4200 => DifficultyLevel::Medium,      // 40s -> 70s (30s)
+            4201..=4800 => DifficultyLevel::MediumTransition, // 70s -> 80s (10s de transição)
+            4801..=6600 => DifficultyLevel::Hard,        // 80s -> 110s (30s) -> Duração total ajustada
             _ => {
                 if !self.victory_achieved {
                     self.victory_achieved = true;
@@ -89,7 +89,6 @@ impl Enemy {
             }
         };
         
-        // Atualiza projéteis existentes
         self.projectiles.retain_mut(|projectile| {
             projectile.update();
             
@@ -99,21 +98,33 @@ impl Enemy {
             
             if projectile.collides_with_heart(heart) {
                 let damage = projectile.projectile_type.damage();
-                if heart.take_damage(damage) {
-                    // Dano foi aplicado com sucesso
-                }
+                if heart.take_damage(damage) {}
                 return false;
             }
             
             true
         });
         
-        // Ataques baseados na dificuldade
+        self.bone_obstacles.retain_mut(|obstacle| {
+            obstacle.update();
+
+            if obstacle.is_off_screen() {
+                return false;
+            }
+
+            if obstacle.collides_with_heart(heart) {
+                if heart.take_damage(10) {}
+                return false;
+            }
+
+            true
+        });
+        
         match self.difficulty {
             DifficultyLevel::Easy => self.easy_mode(heart),
-            DifficultyLevel::EasyTransition => self.easy_transition_pattern(heart),
+            DifficultyLevel::EasyTransition => self.easy_transition_pattern(),
             DifficultyLevel::Medium => self.medium_mode(heart),
-            DifficultyLevel::MediumTransition => self.medium_transition_pattern(heart),
+            DifficultyLevel::MediumTransition => self.medium_transition_pattern(),
             DifficultyLevel::Hard => self.hard_mode(heart),
             DifficultyLevel::Victory => {}
         }
@@ -121,6 +132,7 @@ impl Enemy {
     
     pub fn reset(&mut self) {
         self.projectiles.clear();
+        self.bone_obstacles.clear();
         self.game_timer = 0;
         self.attack_timer = 0;
         self.difficulty = DifficultyLevel::Easy;
@@ -131,122 +143,107 @@ impl Enemy {
         self.animation_frame = 0;
     }
     
-    // MODO FÁCIL: Apenas bolinhas pequenas das bordas
     fn easy_mode(&mut self, heart: &Heart) {
         if self.attack_timer % 80 == 0 {
             let edge_position = ((self.attack_timer as f32 * 0.37) % 4.0) / 4.0;
             
             let projectile = Projectile::new_from_rectangle_edge_with_distance(
-                20, 70, 120, 70,
-                heart.body,
-                ProjectileType::Small,
-                edge_position,
-                20
+                20, 70, 120, 70, heart.body, ProjectileType::Small, edge_position, 20
             );
             self.projectiles.push(projectile);
         }
     }
     
-    // PADRÃO DE TRANSIÇÃO FÁCIL: Barragem de projéteis
-    fn easy_transition_pattern(&mut self, heart: &Heart) {
+    fn easy_transition_pattern(&mut self) {
         if !self.pattern_active {
             self.pattern_active = true;
             self.pattern_timer = 0;
         }
         
-        // Cria barragens de projéteis em sequência
-        if self.pattern_timer % 40 == 0 && self.pattern_timer < 200 { // 5 barragens
-            let new_projectiles = Projectile::create_barrage_from_rectangle_with_distance(
-                20, 70, 120, 70,
-                heart.body,
-                4, // 4 projéteis por barrage
-                25
-            );
-            self.projectiles.extend(new_projectiles);
+        if self.pattern_timer > 0 && self.pattern_timer % 50 == 0 && self.pattern_timer < 550 {
+            let step = self.pattern_timer / 50;
+            let from_left = step % 2 == 0;
+            let sine_wave = (self.pattern_timer as f32 * 0.08).sin(); // Frequência um pouco diferente
+            let center_of_range = 93;
+            let amplitude = 23;
+            let y_pos = center_of_range + (sine_wave * amplitude as f32) as i32;
+            
+            let bone_type = if step % 2 == 0 { BoneType::P } else { BoneType::M };
+            self.bone_obstacles.push(BoneObstacle::new(y_pos, from_left, bone_type, 1));
         }
         
-        // Reset do padrão
-        if self.pattern_timer > 300 {
+        if self.pattern_timer > 600 {
             self.pattern_active = false;
-            self.pattern_timer = 0;
         }
     }
     
-    // MODO MÉDIO: Mix de projéteis
     fn medium_mode(&mut self, heart: &Heart) {
         if self.attack_timer % 60 == 0 {
             let edge_position = ((self.attack_timer as f32 * 0.43) % 4.0) / 4.0;
-            
             let projectile = Projectile::new_from_rectangle_edge_with_distance(
-                20, 70, 120, 70,
-                heart.body,
-                ProjectileType::Small,
-                edge_position,
-                18
+                20, 70, 120, 70, heart.body, ProjectileType::Small, edge_position, 18
             );
             self.projectiles.push(projectile);
         }
         
         if self.attack_timer % 120 == 0 {
             let edge_position = ((self.attack_timer as f32 * 0.71) % 4.0) / 4.0;
-            
             let large_proj = Projectile::new_from_rectangle_edge_with_distance(
-                20, 70, 120, 70,
-                heart.body,
-                ProjectileType::Large,
-                edge_position,
-                25
+                20, 70, 120, 70, heart.body, ProjectileType::Large, edge_position, 25
             );
             self.projectiles.push(large_proj);
         }
         
         if self.attack_timer % 90 == 0 {
             let edge_position = ((self.attack_timer as f32 * 0.29) % 4.0) / 4.0;
-            
             let fast_proj = Projectile::new_from_rectangle_edge_with_distance(
-                20, 70, 120, 70,
-                heart.body,
-                ProjectileType::FastSmall,
-                edge_position,
-                15
+                20, 70, 120, 70, heart.body, ProjectileType::FastSmall, edge_position, 15
             );
             self.projectiles.push(fast_proj);
         }
     }
     
-    // PADRÃO DE TRANSIÇÃO MÉDIO: Padrão circular de projéteis
-    fn medium_transition_pattern(&mut self, heart: &Heart) {
+    fn medium_transition_pattern(&mut self) {
         if !self.pattern_active {
             self.pattern_active = true;
             self.pattern_timer = 0;
+            // SUGESTÃO 2: Limpa os projéteis da fase anterior ao iniciar o padrão.
+            self.projectiles.clear();
+        }
+
+        // SUGESTÃO 3: Aumenta o intervalo entre os "canos" de ossos para 70 frames.
+        if self.pattern_timer > 0 && self.pattern_timer % 70 == 0 && self.pattern_timer < 600 {
+            let step = self.pattern_timer / 70;
+            
+            let from_left = false;
+            let gap_size = 40;
+            let sine_wave = (self.pattern_timer as f32 * 0.05).sin();
+            let gap_y_offset = (sine_wave * 15.0) as i32;
+            let gap_y = 75 + 15 + gap_y_offset;
+            let top_bone_type = if step % 2 == 0 { BoneType::G } else { BoneType::M };
+            let bottom_bone_type = if step % 2 == 0 { BoneType::M } else { BoneType::G };
+            let (_, _, top_bone_height) = top_bone_type.get_sprite_data();
+
+            let bone_top = BoneObstacle::new(gap_y - top_bone_height as i32, from_left, top_bone_type, 3);
+            let bone_bottom = BoneObstacle::new(gap_y + gap_size, from_left, bottom_bone_type, 3);
+
+            self.bone_obstacles.push(bone_top);
+            self.bone_obstacles.push(bone_bottom);
         }
         
-        // Padrão circular: projéteis vindo de todas as direções
-        if self.pattern_timer % 30 == 0 && self.pattern_timer < 180 {
-            let new_projectiles = Projectile::create_barrage_from_rectangle_with_distance(
-                20, 70, 120, 70,
-                heart.body,
-                8, // Mais projéteis por vez
-                30
-            );
-            self.projectiles.extend(new_projectiles);
-        }
-        
-        if self.pattern_timer > 300 {
+        if self.pattern_timer > 600 {
             self.pattern_active = false;
-            self.pattern_timer = 0;
         }
     }
     
-    // MODO DIFÍCIL: Ataques intensos + padrões ocasionais
     fn hard_mode(&mut self, heart: &Heart) {
-        // Projéteis constantes mais rápidos
-        if self.attack_timer % 35 == 0 {
+        // SUGESTÃO 1: Aumenta um pouco a taxa de disparos (intervalo de 40 para 38 frames).
+        if self.attack_timer % 38 == 0 {
             let edge_position = ((self.attack_timer as f32 * 0.61) % 4.0) / 4.0;
             
-            let projectile_type = match (self.attack_timer / 35) % 3 {
-                0 => ProjectileType::Small,
-                1 => ProjectileType::Medium,
+            let projectile_type = match (self.attack_timer / 38) % 3 {
+                0 => ProjectileType::Medium,
+                1 => ProjectileType::Large,
                 _ => ProjectileType::FastSmall,
             };
             
@@ -259,81 +256,32 @@ impl Enemy {
             );
             self.projectiles.push(projectile);
         }
-        
-        // Barrage mais frequente
-        if self.attack_timer % 150 == 0 {
-            let new_projectiles = Projectile::create_barrage_from_rectangle_with_distance(
-                20, 70, 120, 70,
-                heart.body,
-                6, // Mais projéteis por barrage
-                20
-            );
-            self.projectiles.extend(new_projectiles);
-        }
     }
     
     pub fn has_player_won(&self) -> bool {
         self.victory_achieved
     }
-    
-    pub fn get_time_remaining_in_level(&self) -> u32 {
-        let (current_phase_start, phase_duration): (u32, u32) = match self.difficulty {
-            DifficultyLevel::Easy => (0, 1800),           // 30s
-            DifficultyLevel::EasyTransition => (1800, 300), // 5s
-            DifficultyLevel::Medium => (2100, 1800),      // 30s
-            DifficultyLevel::MediumTransition => (3900, 300), // 5s
-            DifficultyLevel::Hard => (4200, 900),         // 15s
-            DifficultyLevel::Victory => return 0,
-        };
-        
-        let elapsed_in_phase = self.game_timer.saturating_sub(current_phase_start);
-        let remaining_frames = phase_duration.saturating_sub(elapsed_in_phase);
-        remaining_frames / 60
-    }
-    
-    pub fn get_total_time(&self) -> u32 {
-        self.game_timer / 60
-    }
 
-    // Função auxiliar para obter o sprite atual da animação
     fn get_current_sprite(&self) -> (&[u8], u32, u32, u32) {
         match self.animation_frame {
             0 => (&SANS1, SANS1_WIDTH, SANS1_HEIGHT, SANS1_FLAGS),
             1 => (&SANS2, SANS2_WIDTH, SANS2_HEIGHT, SANS2_FLAGS),
             2 => (&SANS3, SANS3_WIDTH, SANS3_HEIGHT, SANS3_FLAGS),
-            _ => (&SANS1, SANS1_WIDTH, SANS1_HEIGHT, SANS1_FLAGS), // fallback
+            _ => (&SANS1, SANS1_WIDTH, SANS1_HEIGHT, SANS1_FLAGS),
         }
     }
     
     pub fn draw(&self) {
-        // Desenha o Sans com animação
         unsafe { *DRAW_COLORS = 0x03 }
         let (sprite_data, width, height, flags) = self.get_current_sprite();
         blit(sprite_data, 55, 10, width, height, flags);
         
-        // Desenha todos os projéteis
         for proj in &self.projectiles {
             proj.draw();
         }
         
-        // Mostra nível atual e tempo
-        unsafe { *DRAW_COLORS = 0x12 }
-        let (level_name, time_remaining) = match self.difficulty {
-            DifficultyLevel::Easy => ("EASY", self.get_time_remaining_in_level()),
-            DifficultyLevel::EasyTransition => ("PATTERN", self.get_time_remaining_in_level()),
-            DifficultyLevel::Medium => ("MEDIUM", self.get_time_remaining_in_level()),
-            DifficultyLevel::MediumTransition => ("PATTERN", self.get_time_remaining_in_level()),
-            DifficultyLevel::Hard => ("HARD", self.get_time_remaining_in_level()),
-            DifficultyLevel::Victory => ("VICTORY!", 0),
-        };
-        
-        text(level_name, 5, 5);
-        
-        if !matches!(self.difficulty, DifficultyLevel::Victory) {
-            let time_text = format!("{}s", time_remaining);
-            text(&time_text, 5, 15);
-        } else {
-            text("COMPLETED!", 5, 15);
+        for obstacle in &self.bone_obstacles {
+            obstacle.draw();
         }
     }
 }
