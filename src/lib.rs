@@ -9,7 +9,7 @@ mod music;
 use heart::Heart;
 use wasm4::*;
 use enemy::Enemy;
-use enemy::{SANS, SANS_FLAGS, SANS_HEIGHT, SANS_WIDTH};
+use enemy::{SANS3, SANS3_FLAGS, SANS3_HEIGHT, SANS3_WIDTH};
 use music::update_music;
 
 // Enum para controlar o estado do jogo
@@ -37,9 +37,9 @@ fn update() {
                 text("TO START", 10, 40);
 
                 *DRAW_COLORS = 0x02; // Cor 3 para o sprite, fundo transparente
-                let x_pos = 160 - SANS_WIDTH as i32 + 10; // Ajuste para ficar bonito
-                let y_pos = 160 - SANS_HEIGHT as i32 + 10;
-                blit(&SANS, x_pos, y_pos, SANS_WIDTH, SANS_HEIGHT, SANS_FLAGS);
+                let x_pos = 160 - SANS3_WIDTH as i32 + 10; // Ajuste para ficar bonito
+                let y_pos = 160 - SANS3_HEIGHT as i32 + 10;
+                blit(&SANS3, x_pos, y_pos, SANS3_WIDTH, SANS3_HEIGHT, SANS3_FLAGS);
 
                 // Verifica se qualquer botão foi pressionado para iniciar o jogo
                 let gamepad = *GAMEPAD1;
@@ -93,7 +93,7 @@ fn update() {
                 // Tela de Game Over
                 *DRAW_COLORS = 0x21;
                 text("GAME OVER", 45, 60);
-                text("PRESS Z TO", 40, 80);
+                text("PRESS X TO", 40, 80);
                 text("RESTART", 50, 100);
                 
                 // Verifica se Z foi pressionado para recomeçar
@@ -109,15 +109,25 @@ fn update() {
             }
 
             GameState::Victory => {
-            // Tela de vitória
+                // Tela de vitória CENTRALIZADA e com instruções
                 *DRAW_COLORS = 0x31;
-                text("CONGRATULATIONS!", 20, 60);
-                text("YOU SURVIVED!", 30, 80);
-                text("90 SECONDS!", 35, 100);
-                text("YOU WIN!", 40, 120);
+                
+                // Título centralizado
+                text("CONGRATULATIONS!", 15, 30);
+                
+                // Mensagem principal centralizada
+                text("YOU SURVIVED", 35, 50);
+                text("85 SECONDS!", 38, 65);
+                
+                // Resultado centralizado
+                text("YOU WIN!", 45, 85);
+                
+                // Instruções centralizadas
+                text("PRESS X TO", 40, 110);
+                text("PLAY AGAIN", 40, 125);
 
                 let gamepad = *GAMEPAD1;
-                if gamepad & BUTTON_1 != 0 { // BUTTON_1 é o Z
+                if gamepad & BUTTON_2 != 0 { // BUTTON_2 é o X
                     // Reset do jogo
                     if let (Some(ref mut heart), Some(ref mut enemy)) = (HEART.as_mut(), ENEMY.as_mut()) {
                         heart.reset();
