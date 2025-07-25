@@ -6,11 +6,7 @@ date: 2025-07-25
 
 # comic-sans
 
-On days like these, kids like you...
-
-...Should be burning in hell.
-
-Prepare for a relentless challenge in comic-sans, a fan-made survival game where every second counts, inspired by the iconic final battle.
+Prepare for a relentless challenge in Comic-Sans, a fan-made survival game where every second counts, inspired by an iconic final battle.
 
 ## Gameplay & Instructions
 
@@ -18,4 +14,4 @@ Using the arrow keys, you will guide a lone SOUL through a storm of increasingly
 
 Your only mission is to survive. Do you have what it takes to last until the end?
 
-*This project was developed in Rust for the WASM-4 fantasy console by Computer Science students from UEM (State University of Maringá), guided by professor Marcelo Malheiros.
+*This project was developed in Rust for the WASM-4 fantasy console by Computer Science students from UEM (State University of Maringá), guided by their professor, Marcelo Malheiros.
